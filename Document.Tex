@@ -1,0 +1,598 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[T5]{fontenc}        % hỗ trợ tiếng Việt
+\usepackage[utf8]{inputenc}     % mã hóa đầu vào UTF-8
+\usepackage[vietnamese]{babel}  % ngôn ngữ tiếng Việt
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\geometry{margin=1in}
+
+\begin{document}
+\begin{center}
+\section*{Chương 6 : Heapsort}
+\end{center}
+
+\section*{6.1 Heaps}
+\subsection*{6.1-1 : Số phần tử nhỏ nhất và lớn nhất trong một heap có độ cao $h$.}
+\subsection*{1. Định nghĩa độ cao của heap}
+Độ cao $h$ của một heap được định nghĩa là số cạnh trên đường đi dài nhất từ nút gốc đến một nút lá.  
+Ví dụ: heap chỉ có một nút gốc thì có $h = 0$.
+\subsection*{2. Số phần tử tối đa trong heap}
+Heap là một \textit{cây nhị phân đầy đủ} (\textit{complete binary tree}), nên khi tất cả các mức từ $0$ đến $h$ đều đầy đủ, tổng số nút là:\[
+N_{\text{max}} = 1 + 2 + 4 + \dots + 2^{h} = 2^{h+1} - 1
+\]
+\[
+\boxed{N_{\text{max}} = 2^{h+1} - 1}
+\]
+
+\subsection*{3. Số phần tử tối thiểu trong heap}
+Heap có ít nút nhất nhưng vẫn có độ cao $h$ xảy ra khi:
+\begin{itemize}
+    \item Tất cả các mức từ $0$ đến $h-1$ đều đầy đủ,
+    \item Mức cuối cùng ($h$) chỉ có đúng một nút.
+\end{itemize}
+
+Suy ra:
+\[
+N_{\text{min}} = (2^{h} - 1) + 1 = 2^{h}
+\]
+\[
+\boxed{N_{\text{min}} = 2^{h}}
+\]
+
+\subsection*{4. Kết quả tổng quát}
+\[
+\boxed{2^{h} \le N \le 2^{h+1} - 1}
+\]
+
+\subsection*{5. Ví dụ minh họa}
+Với $h = 3$:
+\[
+N_{\text{min}} = 2^{3} = 8, \quad N_{\text{max}} = 2^{4} - 1 = 15
+\]
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Đặc trưng & Công thức & Ví dụ ($h=3$) \\
+\hline
+Số phần tử tối thiểu & $N_{\text{min}} = 2^{h}$ & $8$ \\
+\hline
+Số phần tử tối đa & $N_{\text{max}} = 2^{h+1} - 1$ & $15$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection*{6.1-2 Proof that an \(n\)-element heap has height \(\lfloor \log_2 n\rfloor\)}
+Giả sử heap có độ cao là $h$, trong đó độ cao được định nghĩa là số cạnh trên đường dài nhất từ nút gốc đến một nút lá  
+(như vậy heap chỉ có một nút gốc sẽ có $h = 0$).
+Vì heap là một \textit{cây nhị phân đầy đủ} (complete binary tree), nên với một độ cao $h$ bất kỳ, số lượng nút $N$ trong heap sẽ thỏa mãn:
+\[
+2^{h} \le N \le 2^{h+1} - 1.
+\]
+Giả sử heap có $n$ phần tử, khi đó:
+\[
+2^{h} \le n \le 2^{h+1} - 1.
+\]
+Suy ra:
+\[
+2^{h} \le n < 2^{h+1}.
+\]
+Lấy logarit cơ số 2 hai vế, ta có:
+\[
+h \le \log_2 n < h + 1.
+\]
+Theo định nghĩa của hàm lấy phần nguyên (floor), chỉ có một giá trị nguyên $h$ duy nhất thỏa mãn bất đẳng thức trên, đó là:
+\[
+h = \lfloor \log_2 n \rfloor.
+\]
+Do đó, ta kết luận rằng một heap có $n$ phần tử sẽ có độ cao:
+\[
+\boxed{h = \lfloor \log_2 n \rfloor.}
+\]
+
+\subsection*{6.1-3 Show that in any subtree of a max-heap, the root of the subtree contains the largest
+ value occurring anywhere in that subtree.}
+\subsection*{1.Tính chất của max-heap: nút gốc của mọi subtree là lớn nhất trong subtree đó}
+\textbf{Mệnh đề.} Trong một max-heap, với mọi nút $r$ bất kỳ, giá trị tại $r$ không nhỏ hơn giá trị của mọi nút trong cây con có gốc tại $r$.
+
+\textbf{Chứng minh.} Ta chứng minh theo quy nạp theo chiều cao $h$ của cây con có gốc $r$.
+
+\emph{Cơ sở:} Nếu $h = 0$ (tức là cây con chỉ có một nút — chính là $r$), tuyên bố rõ ràng đúng vì không còn nút nào khác để so sánh.
+
+\emph{Bước quy nạp:} Giả sử mệnh đề đúng với mọi cây con có chiều cao nhỏ hơn $h$ (với $h \ge 1$). Xét một cây con có gốc $r$ và chiều cao $h$. Theo tính chất của \emph{max-heap}, giá trị ở nút cha luôn không nhỏ hơn giá trị ở mỗi con trực tiếp của nó. Gọi các con trực tiếp của $r$ là $c_1, c_2$ (nếu tồn tại). Mỗi cây con có gốc $c_i$ có chiều cao nhỏ hơn $h$, do đó theo giả thiết quy nạp, giá trị ở $c_i$ không nhỏ hơn mọi giá trị trong cây con gốc $c_i$. Kết hợp với tính chất heap (giá trị tại $r \ge$ giá trị tại $c_i$) ta có:
+\[
+\text{giá trị}(r) \ge \text{giá trị}(c_i) \ge \text{mọi giá trị trong cây con gốc } c_i.
+\]
+Vì mọi nút khác trong cây con gốc $r$ đều thuộc một trong các cây con gốc $c_i$, suy ra giá trị tại $r$ không nhỏ hơn mọi giá trị trong toàn bộ cây con gốc $r$.
+
+Do đó mệnh đề đúng với chiều cao $h$. Theo nguyên lý quy nạp, mệnh đề đúng với mọi chiều cao.
+
+\hfill\(\square\)
+
+\bigskip
+\textbf{Ghi chú ngắn:} Một cách hiểu trực quan hơn là: tính chất max-heap bảo đảm mỗi nút lớn hơn hoặc bằng các con trực tiếp; nối các bất đẳng thức theo một đường từ gốc tới bất kỳ nút lá nào cho thấy gốc luôn lớn hơn hoặc bằng mọi nút trong đường đó — và do mọi nút trong subtree đều nằm trên một đường như vậy từ gốc, nên gốc là lớn nhất trong subtree.
+
+
+
+\subsection*{6.1-4 Where in a max-heap might the smallest element reside, assuming that all elements
+ are distinct?}
+\textbf{Mệnh đề.}  
+Trong một \textit{max-heap} (tất cả các phần tử đều khác nhau), phần tử nhỏ nhất luôn nằm ở một trong các \textit{nút lá} của cây. \\
+\bigskip
+\textbf{Chứng minh : }  
+
+Theo định nghĩa của \textit{max-heap}, với mọi nút $i$ ta có:
+\[
+A[i] \ge A[\text{left}(i)], \quad A[i] \ge A[\text{right}(i)].
+\]
+Nói cách khác, giá trị của mỗi nút luôn lớn hơn hoặc bằng giá trị của các con trực tiếp của nó.
+
+\medskip
+Do đó, khi ta di chuyển từ gốc xuống các mức thấp hơn của cây, giá trị của các nút sẽ không tăng mà chỉ có thể giảm.  
+Điều này có nghĩa là:
+\begin{itemize}
+    \item Nút gốc chứa giá trị lớn nhất trong toàn bộ heap.
+    \item Các nút ở gần gốc có xu hướng có giá trị lớn hơn các nút ở gần lá.
+\end{itemize}
+
+Giả sử phần tử nhỏ nhất không nằm ở nút lá mà nằm ở một nút bên trong cây.  
+Vì nút đó có ít nhất một nút con, theo tính chất heap ta phải có:
+\[
+A[\text{cha}] \ge A[\text{nút nhỏ nhất}],
+\]
+mâu thuẫn với việc nút này chứa phần tử nhỏ nhất.  
+Do đó, phần tử nhỏ nhất không thể nằm ở bất kỳ nút bên trong nào.
+
+\medskip
+Suy ra, phần tử nhỏ nhất chỉ có thể nằm ở một trong các \textit{nút lá} (tức là các nút không có con).
+
+\[
+\boxed{\text{Phần tử nhỏ nhất trong max-heap nằm ở một trong các nút lá.}}
+\]
+
+\bigskip
+\textbf{Ghi chú.}  
+Nếu heap có tổng cộng $n$ phần tử và được lưu dưới dạng mảng $A[1 \dots n]$,  
+thì các nút lá chính là những phần tử có chỉ số từ:
+\[
+\left\lfloor \frac{n}{2} \right\rfloor + 1, \;
+\left\lfloor \frac{n}{2} \right\rfloor + 2, \;
+\dots, \;
+n.
+\]
+Do đó, phần tử nhỏ nhất nằm ở một trong các chỉ số này.
+
+\[
+\boxed{\text{Vị trí phần tử nhỏ nhất: } 
+\left\lfloor \tfrac{n}{2} \right\rfloor + 1 \text{ đến } n.}
+\]
+
+\subsection*{6.1-5 Is an array that is in sorted order a min-heap?}
+\textbf{Định nghĩa.}  
+Một \textit{min-heap} là một cây nhị phân thỏa mãn hai tính chất sau:
+\begin{enumerate}
+    \item \textbf{Tính chất hình dạng (shape property):}  
+    Cây là \textit{cây nhị phân đầy đủ} --- tất cả các mức đều được lấp đầy, trừ có thể là mức cuối cùng, được lấp từ trái sang phải.
+    \item \textbf{Tính chất heap (heap property):}  
+    Với mọi nút $i$ khác gốc, ta có:
+    \[
+    A[\text{cha}(i)] \le A[i].
+    \]
+\end{enumerate}
+
+\bigskip
+\textbf{Xét mảng đã sắp xếp tăng dần:}
+\[
+A = [1, 2, 3, 4, 5, 6, 7, \dots, n].
+\]
+
+Khi lưu trữ dưới dạng \textit{heap} trong mảng:
+\begin{itemize}
+    \item $A[1]$ là nút gốc,
+    \item $A[2]$ và $A[3]$ là hai nút con của nó,
+    \item $A[4], A[5], A[6], A[7]$ là các nút ở mức tiếp theo, \ldots
+\end{itemize}
+
+\bigskip
+\textbf{Kiểm tra tính chất heap:}  
+
+Với mọi nút $i$, chỉ số của cha là $p = \lfloor i/2 \rfloor$.  
+Vì mảng được sắp xếp tăng dần nên $p < i \Rightarrow A[p] < A[i]$.  
+Do đó, điều kiện:
+\[
+A[\text{cha}(i)] \le A[i]
+\]
+luôn đúng.  
+
+\textbf{Kiểm tra tính chất hình dạng:}  
+Bất kỳ mảng nào khi diễn giải dưới dạng cây nhị phân đều là cây nhị phân đầy đủ.  
+
+\medskip
+\textbf{Kết luận:}  
+Mảng được sắp xếp tăng dần \textbf{thỏa mãn cả hai tính chất} trên, nên nó là một \textit{min-heap hợp lệ}.  
+
+\[
+\boxed{\text{Một mảng sắp tăng là một min-heap.}}
+\]
+
+Tuy nhiên, điều ngược lại không đúng:  
+Không phải mọi \textit{min-heap} đều là mảng đã sắp xếp.  
+Trong \textit{min-heap}, chỉ cần mỗi nút nhỏ hơn hoặc bằng các nút con của nó,  
+nhưng các nút cùng mức hoặc ở các nhánh khác nhau có thể không theo thứ tự.
+
+\bigskip
+\textbf{Tóm tắt:}
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Câu hỏi} & \textbf{Trả lời} \\
+\hline
+Mảng sắp tăng có phải là \textit{min-heap}? & Có. \\
+\hline
+Mọi \textit{min-heap} có phải là mảng sắp tăng? & Không. \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection*{6.1-6 Is the array with values h23;17;14;6;13;10;1;5;7;12i a max-heap?}
+\textbf{Đề bài:}  
+Cho mảng:
+\[
+A = [23,\; 17,\; 14,\; 6,\; 13,\; 10,\; 1,\; 5,\; 7,\; 12].
+\]
+Hỏi: Mảng này có phải là \textit{max-heap} không?
+
+\bigskip
+\textbf{Phân tích:}  
+Một \textit{max-heap} phải thỏa mãn điều kiện:
+\[
+A[\text{cha}(i)] \ge A[i], \quad \forall i > 1.
+\]
+với $\text{cha}(i) = \lfloor i/2 \rfloor$.
+
+\bigskip
+\textbf{Xây dựng bảng kiểm tra:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Chỉ số (i)} & \textbf{Giá trị $A[i]$} & \textbf{Cha $\lfloor i/2 \rfloor$} & \textbf{Giá trị cha $A[\text{cha}(i)]$} \\
+\hline
+1 & 23 & --- & --- \\
+\hline
+2 & 17 & 1 & 23 \\
+\hline
+3 & 14 & 1 & 23 \\
+\hline
+4 & 6 & 2 & 17 \\
+\hline
+5 & 13 & 2 & 17 \\
+\hline
+6 & 10 & 3 & 14 \\
+\hline
+7 & 1 & 3 & 14 \\
+\hline
+8 & 5 & 4 & 6 \\
+\hline
+9 & 7 & 4 & 6 \\
+\hline
+10 & 12 & 5 & 13 \\
+\hline
+\end{tabular}
+\end{center}
+
+\bigskip
+\textbf{Kiểm tra từng nút:}
+\begin{itemize}
+    \item $23 > 17$, $23 > 14$ $\Rightarrow$ đúng.
+    \item $17 > 6$, $17 > 13$ $\Rightarrow$ đúng.
+    \item $14 > 10$, $14 > 1$ $\Rightarrow$ đúng.
+    \item $6 > 5$ nhưng $6 < 7$ $\Rightarrow$ \textbf{sai}.
+    \item $13 > 12$ $\Rightarrow$ đúng.
+\end{itemize}
+
+\bigskip
+\textbf{Nhận xét:}  
+Tại nút có giá trị $6$ (vị trí $i = 4$), con bên phải của nó là $7$ lớn hơn cha,  
+nên điều kiện \textit{max-heap} bị vi phạm.
+
+\[
+\boxed{\text{Mảng trên \textbf{không} phải là max-heap.}}
+\]
+
+\subsection*{6.1-7 Show that, with the array representation for storing an n-element heap, the leaves
+ are the nodes indexed by \[
+\left\lfloor \frac{n}{2} \right\rfloor + 1,\;
+\left\lfloor \frac{n}{2} \right\rfloor + 2,\;
+\dots,\;
+n.
+\]}
+\section*{Bài toán}
+Chứng minh rằng, trong cách biểu diễn \textbf{heap có \( n \) phần tử} bằng mảng,
+các \textbf{nút lá} là các nút có chỉ số:
+\[
+\left\lfloor \frac{n}{2} \right\rfloor + 1,\;
+\left\lfloor \frac{n}{2} \right\rfloor + 2,\;
+\dots,\;
+n.
+\]
+
+\section*{Chứng minh}
+
+\subsection*{1. Cấu trúc của heap trong mảng}
+Giả sử heap được lưu trữ trong mảng \( A[1..n] \).  
+Ta có quy tắc đánh chỉ số như sau:
+
+\begin{itemize}
+    \item Nút gốc (\textit{root}) ở vị trí \( 1 \).
+    \item Với mỗi nút tại vị trí \( i \):
+    \begin{itemize}
+        \item Con trái của nó ở vị trí \( 2i \),
+        \item Con phải của nó ở vị trí \( 2i + 1 \),
+        \item Cha của nó ở vị trí \( \lfloor i/2 \rfloor \).
+    \end{itemize}
+\end{itemize}
+
+\subsection*{2. Định nghĩa nút lá}
+Một \textbf{nút lá} là nút không có con nào.  
+Điều này xảy ra khi chỉ số của con trái vượt quá số phần tử trong mảng, tức là:
+
+\[
+2i > n.
+\]
+
+Do đó, nút \( i \) là nút lá khi và chỉ khi \( 2i > n \).
+
+\subsection*{3. Suy ra miền chỉ số của các nút lá}
+Từ bất đẳng thức trên, ta có:
+\[
+2i > n \;\Rightarrow\; i > \frac{n}{2}.
+\]
+
+Vì \( i \) là số nguyên, giá trị nhỏ nhất của \( i \) thỏa mãn điều kiện là:
+\[
+i = \left\lfloor \frac{n}{2} \right\rfloor + 1.
+\]
+
+Vậy, tập hợp các nút lá là:
+\[
+\boxed{
+\left\lfloor \frac{n}{2} \right\rfloor + 1,\;
+\left\lfloor \frac{n}{2} \right\rfloor + 2,\;
+\dots,\;
+n.
+}
+\]
+
+\subsection*{4. Ví dụ minh họa}
+Giả sử \( n = 10 \).  
+Ta có \( \left\lfloor \frac{n}{2} \right\rfloor = 5 \).  
+Vậy các nút lá là:
+\[
+6,\,7,\,8,\,9,\,10.
+\]
+
+Kiểm tra:
+\begin{itemize}
+    \item Với \( i = 5 \): \( 2i = 10 \le n \Rightarrow \) có con, không phải lá.
+    \item Với \( i = 6 \): \( 2i = 12 > 10 \Rightarrow \) không có con, là lá.
+\end{itemize}
+
+\section*{Kết luận}
+Trong biểu diễn bằng mảng của một heap có \( n \) phần tử,  
+các nút lá chính là những nút mang các chỉ số:
+\[
+\boxed{
+\left\lfloor \frac{n}{2} \right\rfloor + 1,\;
+\left\lfloor \frac{n}{2} \right\rfloor + 2,\;
+\dots,\;
+n.
+}
+\]
+\subsection*{6.2 Maintaining the heap property}
+\subsection*{6.2-1 Using Figure 6.2 as a model, illustrate the operation of MAX-HEAPIFY(A,3) on
+the array \[
+A = [27,\,17,\,3,\,16,\,13,\,10,\,1,\,5,\,7,\,12,\,4,\,8,\,9,\,0].
+\]}
+
+Minh họa quá trình thực hiện:
+\[
+\text{MAX-HEAPIFY}(A, 3)
+\]
+với mảng ban đầu:
+\[
+A = [27,\,17,\,3,\,16,\,13,\,10,\,1,\,5,\,7,\,12,\,4,\,8,\,9,\,0].
+\]
+
+\section*{1. Nguyên lý thuật toán}
+
+Với chỉ số \(i\):
+\[
+\text{LEFT}(i) = 2i, \quad \text{RIGHT}(i) = 2i + 1.
+\]
+
+Thuật toán \texttt{MAX-HEAPIFY(A, i)} giả sử rằng hai cây con \(A[\text{LEFT}(i)]\) và \(A[\text{RIGHT}(i)]\) đều đã là \textbf{max-heap}, nhưng nút \(A[i]\) có thể nhỏ hơn một trong hai con.  
+Mục tiêu là phục hồi lại tính chất \textbf{max-heap} cho cây gốc tại \(i\).
+
+\noindent\textbf{Các bước:}
+\begin{enumerate}
+    \item Tìm phần tử lớn nhất trong ba phần tử \(A[i]\), \(A[\text{LEFT}(i)]\) và \(A[\text{RIGHT}(i)]\).
+    \item Nếu một trong hai con lớn hơn cha, hoán đổi cha với con lớn nhất.
+    \item Gọi đệ quy lại \texttt{MAX-HEAPIFY} tại chỉ số con vừa hoán đổi.
+\end{enumerate}
+
+\section*{2. Bước đầu tiên – Gọi tại \(i = 3\)}
+
+Tính các chỉ số con:
+\[
+\text{LEFT}(3) = 6, \quad \text{RIGHT}(3) = 7.
+\]
+\[
+A[3] = 3, \quad A[6] = 10, \quad A[7] = 1.
+\]
+
+Phần tử lớn nhất trong ba phần tử trên là \(A[6] = 10\).  
+Ta thực hiện hoán đổi:
+\[
+A[3] \leftrightarrow A[6].
+\]
+Khi đó, mảng trở thành:
+\[
+A = [27,\,17,\,10,\,16,\,13,\,3,\,1,\,5,\,7,\,12,\,4,\,8,\,9,\,0].
+\]
+
+\section*{3. Gọi đệ quy tại \(i = 6\)}
+
+\[
+\text{LEFT}(6) = 12, \quad \text{RIGHT}(6) = 13.
+\]
+\[
+A[6] = 3, \quad A[12] = 8, \quad A[13] = 9.
+\]
+Phần tử lớn nhất là \(A[13] = 9\).  
+Hoán đổi:
+\[
+A[6] \leftrightarrow A[13].
+\]
+Ta được:
+\[
+A = [27,\,17,\,10,\,16,\,13,\,9,\,1,\,5,\,7,\,12,\,4,\,8,\,3,\,0].
+\]
+
+Vì \(i = 13\) không còn con (\(2 \times 13 = 26 > 14\)), thuật toán dừng lại.
+
+\section*{4. Kết quả cuối cùng}
+
+\[
+\boxed{A = [27,\,17,\,10,\,16,\,13,\,9,\,1,\,5,\,7,\,12,\,4,\,8,\,3,\,0]}
+\]
+
+\section*{5. Minh họa cấu trúc cây nhị phân (tương tự Hình 6.2 trong CLRS)}
+
+\subsection*{(a) Trước khi gọi \texttt{MAX-HEAPIFY(A, 3)}}
+\begin{center}
+\begin{tikzpicture}[
+  level distance=12mm,
+  every node/.style={circle, draw, minimum size=8mm, font=\small},
+  level 1/.style={sibling distance=40mm},
+  level 2/.style={sibling distance=20mm},
+  level 3/.style={sibling distance=10mm}
+]
+\node {27}
+  child { node {17}
+    child { node {16}
+      child { node {5} }
+      child { node {7} }
+    }
+    child { node {13}
+      child { node {12} }
+      child { node {4} }
+    }
+  }
+  child { node {3}
+    child { node {10}
+      child { node {8} }
+      child { node {9} }
+    }
+    child { node {1}
+      child { node {0} }
+    }
+  };
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+\subsection*{(b) Sau khi hoán đổi lần 1 (\(3 \leftrightarrow 10\))}
+\begin{center}
+\begin{tikzpicture}[
+  level distance=12mm,
+  every node/.style={circle, draw, minimum size=8mm, font=\small},
+  level 1/.style={sibling distance=40mm},
+  level 2/.style={sibling distance=20mm},
+  level 3/.style={sibling distance=10mm}
+]
+\node {27}
+  child { node {17}
+    child { node {16}
+      child { node {5} }
+      child { node {7} }
+    }
+    child { node {13}
+      child { node {12} }
+      child { node {4} }
+    }
+  }
+  child { node {10}
+    child { node {3}
+      child { node {8} }
+      child { node {9} }
+    }
+    child { node {1}
+      child { node {0} }
+    }
+  };
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+\subsection*{(c) Sau khi hoán đổi lần 2 (\(3 \leftrightarrow 9\))}
+\begin{center}
+\begin{tikzpicture}[
+  level distance=12mm,
+  every node/.style={circle, draw, minimum size=8mm, font=\small},
+  level 1/.style={sibling distance=40mm},
+  level 2/.style={sibling distance=20mm},
+  level 3/.style={sibling distance=10mm}
+]
+\node {27}
+  child { node {17}
+    child { node {16}
+      child { node {5} }
+      child { node {7} }
+    }
+    child { node {13}
+      child { node {12} }
+      child { node {4} }
+    }
+  }
+  child { node {10}
+    child { node {9}
+      child { node {8} }
+      child { node {3} }
+    }
+    child { node {1}
+      child { node {0} }
+    }
+  };
+\end{tikzpicture}
+\end{center}
+
+% \captionof{figure}{Ba giai đoạn thực hiện thuật toán \texttt{MAX-HEAPIFY(A,3)}}
+
+\vspace{1cm}
+
+\section*{6. Kết luận}
+
+Sau khi thực hiện:
+\[
+\text{MAX-HEAPIFY}(A, 3),
+\]
+mảng trở thành:
+\[
+A = [27,\,17,\,10,\,16,\,13,\,9,\,1,\,5,\,7,\,12,\,4,\,8,\,3,\,0],
+\]
+và cây kết quả tiếp tục duy trì \textbf{tính chất Max-Heap}:
+\[
+A[\text{cha}] \geq A[\text{con trái}], \quad A[\text{cha}] \geq A[\text{con phải}].
+\]
+
+\end{document}
+
+
+\end{document}
